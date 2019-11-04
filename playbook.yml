@@ -1,0 +1,93 @@
+---
+- name: Hello World
+  hosts: all
+  sudo: yes
+  tasks:
+    - name: Installs nginx web server
+      apt:
+        pkg: nginx
+        state: installed
+        update_cache: true
+      notify:
+        - start nginx
+      tags: web
+
+    - name: remove /etc/nginx/sites-available/default
+      file:
+        path: /etc/nginx/sites-available/default
+        state: absent
+      tags: web
+
+    - name: remove /etc/nginx/sites-enabled/default
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      tags: web
+
+    - name: Move our config file into place
+      command: mv /home/vagrant/tornado.conf /etc/nginx/conf.d/tornado.conf
+      notify:
+        - start nginx
+      tags: web
+
+    - name: Installs python and pip
+      apt: pkg={{ item }} state=installed
+      with_items:
+        - python
+        - python-pip
+        - libpq-dev
+        - python-dev
+      tags: app
+
+    - name: Install tornado and psycopg2
+      pip: name={{ item }}
+      with_items:
+        - tornado
+        - psycopg2
+      tags: app
+
+    - name: Install Postgresql
+      apt: pkg={{ item }} state=installed
+      register: postgresql_install
+      with_items:
+        - postgresql
+        - postgresql-contrib
+        - python-psycopg2
+      tags: db
+
+    - name: Lets create a db
+      sudo: yes
+      sudo_user: postgres
+      postgresql_db:
+        name: devops_generator
+        state: present
+      tags: db
+
+    - name: Create a table
+      sudo: yes
+      sudo_user: postgres
+      command: psql devops_generator -c 'CREATE TABLE IF NOT EXISTS devops (foo varchar(40));'
+      tags: db
+
+    - name: I guess we should put some data in it
+      sudo: yes
+      sudo_user: postgres
+      command: psql devops_generator -c "INSERT INTO devops VALUES ('bar');"
+      tags: db
+
+    - name: Lets see whats in the table
+      sudo: yes
+      sudo_user: postgres
+      command: psql devops_generator -c 'select * from devops;'
+      tags: db
+
+    - name: start tornado
+      sudo: yes
+      sudo_user: postgres
+      shell: nohup python /home/vagrant/webserver.py &
+      tags: app
+
+  handlers:
+    - name: start nginx
+      service: name=nginx state=started
+      tags: web
