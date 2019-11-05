@@ -1,12 +1,12 @@
 ---
 - name: Hello World
   hosts: all
-  sudo: yes
+  #sudo: yes
   tasks:
     - name: Installs nginx web server
       apt:
         pkg: nginx
-        state: installed
+        state: present
         update_cache: true
       notify:
         - start nginx
@@ -31,7 +31,7 @@
       tags: web
 
     - name: install prerequisites
-      sudo: true
+      #sudo: true
       apt: name={{ item }} state=latest
       with_items:
         - python-apt
@@ -45,7 +45,7 @@
       tags: app
 
     - name: Install Postgresql
-      apt: pkg={{ item }} state=installed
+      apt: pkg={{ item }} state=present
       register: postgresql_install
       with_items:
         - postgresql
@@ -54,34 +54,34 @@
       tags: db
 
     - name: Lets create a db
-      sudo: yes
-      sudo_user: postgres
+      #sudo: yes
+      #sudo_user: postgres
       postgresql_db:
         name: alvin_generator
         state: present
       tags: db
 
     - name: Create a table
-      sudo: yes
-      sudo_user: postgres
+      #sudo: yes
+      #sudo_user: postgres
       command: psql alvin_generator -c 'CREATE TABLE IF NOT EXISTS alvin (foo varchar(40));'
       tags: db
 
     - name: I guess we should put some data in it
-      sudo: yes
-      sudo_user: postgres
+      #sudo: yes
+      #sudo_user: postgres
       command: psql alvin_generator -c "INSERT INTO alvin VALUES ('bar');"
       tags: db
 
     - name: Lets see whats in the table
-      sudo: yes
-      sudo_user: postgres
+      #sudo: yes
+      #sudo_user: postgres
       command: psql alvin_generator -c 'select * from alvin;'
       tags: db
 
     - name: start tornado
-      sudo: yes
-      sudo_user: postgres
+      #sudo: yes
+      #sudo_user: postgres
       shell: nohup python /home/vagrant/webserver.py &
       tags: app
 
