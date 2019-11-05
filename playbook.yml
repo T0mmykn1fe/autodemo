@@ -30,20 +30,18 @@
         - start nginx
       tags: web
 
-    - name: Installs python and pip
-      apt: pkg={{ item }} state=installed
+    - name: install prerequisites
+      sudo: true
+      apt: name={{ item }} state=latest
       with_items:
+        - python-apt
         - python
+        - python-pycurl
         - python-pip
+        - python-tornado
         - libpq-dev
         - python-dev
-      tags: app
-
-    - name: Install tornado and psycopg2
-      pip: name={{ item }}
-      with_items:
-        - tornado
-        - psycopg2
+        - python-psycopg2    
       tags: app
 
     - name: Install Postgresql
@@ -59,26 +57,26 @@
       sudo: yes
       sudo_user: postgres
       postgresql_db:
-        name: devops_generator
+        name: alvin_generator
         state: present
       tags: db
 
     - name: Create a table
       sudo: yes
       sudo_user: postgres
-      command: psql devops_generator -c 'CREATE TABLE IF NOT EXISTS devops (foo varchar(40));'
+      command: psql alvin_generator -c 'CREATE TABLE IF NOT EXISTS alvin (foo varchar(40));'
       tags: db
 
     - name: I guess we should put some data in it
       sudo: yes
       sudo_user: postgres
-      command: psql devops_generator -c "INSERT INTO devops VALUES ('bar');"
+      command: psql alvin_generator -c "INSERT INTO alvin VALUES ('bar');"
       tags: db
 
     - name: Lets see whats in the table
       sudo: yes
       sudo_user: postgres
-      command: psql devops_generator -c 'select * from devops;'
+      command: psql alvin_generator -c 'select * from alvin;'
       tags: db
 
     - name: start tornado
